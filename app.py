@@ -349,7 +349,7 @@ def tab_dashboard():
                 yaxis=dict(gridcolor="#1A1A28", color="#9090A0", zeroline=True, zerolinecolor="#2A2A3D"),
                 showlegend=False,
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig)
         else:
             st.info("No closed trades yet. Run the bot to generate data.")
 
@@ -373,7 +373,7 @@ def tab_dashboard():
                 yaxis=dict(gridcolor="#1A1A28", color="#9090A0"),
                 showlegend=False,
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2)
         else:
             st.info("No trade data yet.")
 
@@ -407,7 +407,7 @@ def _render_candlestick(df: pd.DataFrame, show_emas=True):
         legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#9090A0", size=10)),
         showlegend=True,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -516,7 +516,7 @@ def tab_trades():
                 "entry_price":"Entry","sl":"SL","tp1":"TP1","tp2":"TP2",
                 "lot_size":"Lot","confidence":"Conf","open_time":"Opened"
             }),
-            use_container_width=True, hide_index=True
+            use_container_width=True, hide_index=True,
         )
         st.divider()
 
@@ -601,7 +601,7 @@ def tab_analytics():
                     height=280, margin=dict(l=0,r=0,t=10,b=0),
                     font=dict(color="#9090A0", size=11),
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig)
 
     # Equity curve
     st.markdown("**📊 Equity Curve**")
@@ -625,7 +625,7 @@ def tab_analytics():
             yaxis=dict(gridcolor="#1A1A28", color="#9090A0", side="right"),
             showlegend=False,
         )
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3)
 
     # Optimizer log
     st.markdown("**⚙️ Optimizer Weights**")
@@ -675,7 +675,8 @@ def run_bot_cycle():
             smc_h1, smc_m15, sr_levels, regime, session,
             st.session_state.strategy_weights,
         )
-        st.session_state.last_signals = signals
+        # Store as dicts so _render_signal_cards can call .get()
+        st.session_state.last_signals = [s.to_dict() for s in signals]
 
         # Save signals to DB
         for sig in signals:
