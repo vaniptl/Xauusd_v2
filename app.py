@@ -447,58 +447,65 @@ def _render_signal_cards(signals, live=False):
     cols = st.columns(2)
     for i, sig in enumerate(signals):
         with cols[i % 2]:
-            direction  = sig.get("direction","")
-            strategy   = (sig.get("strategy","") or "").replace("_"," ").upper()
+            direction  = sig.get("direction", "") or ""
+            strategy   = (sig.get("strategy", "") or "").replace("_", " ").upper()
             conf       = float(sig.get("confidence") or 0)
             entry      = float(sig.get("entry_price") or sig.get("entry") or 0)
             sl         = float(sig.get("sl") or 0)
             tp1        = float(sig.get("tp1") or sig.get("take_profit_1") or 0)
             tp2        = float(sig.get("tp2") or sig.get("take_profit_2") or 0)
             rr2        = float(sig.get("rr2") or sig.get("risk_reward_2") or 0)
-            session_s  = sig.get("session","")
-            regime_s   = (sig.get("regime","") or "").replace("_"," ")
-            notes      = sig.get("notes","")
-            ts         = sig.get("timestamp","")
+            session_s  = sig.get("session", "") or ""
+            regime_s   = (sig.get("regime", "") or "").replace("_", " ")
+            notes      = (sig.get("notes", "") or "")[:80]
+            ts_raw     = sig.get("timestamp", "") or ""
             acted      = sig.get("acted_on", 0)
 
-            is_buy     = direction == "BUY"
-            dir_color  = "#22c55e" if is_buy else "#ef4444"
-            dir_emoji  = "▲" if is_buy else "▼"
-            conf_color = "#22c55e" if conf >= 80 else "#B8860B" if conf >= 65 else "#ef4444"
-            border_col = "#22c55e44" if is_buy else "#ef4444aa"
+            is_buy      = direction == "BUY"
+            dir_emoji   = "▲" if is_buy else "▼"
+            conf_color  = "#22c55e" if conf >= 80 else "#B8860B" if conf >= 65 else "#ef4444"
+            border_col  = "#22c55e66" if is_buy else "#ef444488"
+            card_class  = "signal-buy" if is_buy else "signal-sell"
+            badge_class = "badge-buy"  if is_buy else "badge-sell"
+            dir_bg      = "#0a2e1a"    if is_buy else "#2e0a0a"
+            dir_col     = "#22c55e"    if is_buy else "#ef4444"
+            ts_display  = ts_raw[:19].replace("T", " ") if ts_raw else ""
+            traded_html = '<span style="background:#1a1400;color:#B8860B;border:1px solid #B8860B44;padding:.15rem .5rem;border-radius:4px;font-size:10px;font-weight:700;margin-left:6px">TRADED</span>' if acted else ""
+            notes_html  = f'<div style="font-size:10px;color:#505060;margin-top:.4rem;border-top:1px solid #1A1A28;padding-top:.4rem">{notes}</div>' if notes else ""
 
-            st.markdown(f"""
-            <div class="signal-card signal-{'buy' if is_buy else 'sell'}" style="border:1px solid {border_col}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem">
-                <div>
-                  <div style="font-size:12px;font-weight:700;color:#E0E0E0;letter-spacing:.04em">{strategy}</div>
-                  <span class="badge badge-{'buy' if is_buy else 'sell'}" style="margin-top:3px">{dir_emoji} {direction}</span>
-                  {'<span class="badge badge-gold" style="margin-left:4px">✓ TRADED</span>' if acted else ''}
-                </div>
-                <div style="text-align:right">
-                  <div style="font-size:22px;font-weight:700;color:{conf_color}">{conf:.0f}%</div>
-                  <div style="font-size:10px;color:#606070">confidence</div>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;margin:.5rem 0">
-                <div><div style="font-size:10px;color:#606070;text-transform:uppercase">Entry</div>
-                     <div style="font-size:13px;font-weight:600;font-family:monospace">${entry:,.2f}</div></div>
-                <div><div style="font-size:10px;color:#606070;text-transform:uppercase">Stop Loss</div>
-                     <div style="font-size:13px;font-weight:600;font-family:monospace;color:#ef4444">${sl:,.2f}</div></div>
-                <div><div style="font-size:10px;color:#606070;text-transform:uppercase">TP 1</div>
-                     <div style="font-size:13px;font-weight:600;font-family:monospace;color:#22c55e">${tp1:,.2f}</div></div>
-                <div><div style="font-size:10px;color:#606070;text-transform:uppercase">TP 2</div>
-                     <div style="font-size:13px;font-weight:600;font-family:monospace;color:#22c55e">${tp2:,.2f}</div></div>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;
-                          border-top:1px solid #1A1A28;padding-top:.5rem;font-size:11px;color:#606070">
-                <span>{session_s} · {regime_s}</span>
-                <span style="background:#1a1400;color:#B8860B;padding:.15rem .5rem;border-radius:4px;font-weight:700">1:{rr2:.1f} RR</span>
-              </div>
-              {f'<div style="font-size:10px;color:#505060;margin-top:.3rem;border-top:1px solid #1A1A28;padding-top:.3rem">{notes[:80]}</div>' if notes else ''}
-              <div style="font-size:10px;color:#404050;margin-top:.2rem">{ts[:19].replace("T"," ") if ts else ""}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html = (
+                f'<div class="signal-card {card_class}" style="border:1px solid {border_col}">'
+                f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem">'
+                f'<div>'
+                f'<div style="font-size:12px;font-weight:700;color:#E0E0E0;letter-spacing:.04em">{strategy}</div>'
+                f'<span style="display:inline-block;background:{dir_bg};color:{dir_col};border-radius:4px;padding:.2rem .6rem;font-size:11px;font-weight:700;margin-top:4px">{dir_emoji} {direction}</span>'
+                f'{traded_html}'
+                f'</div>'
+                f'<div style="text-align:right">'
+                f'<div style="font-size:22px;font-weight:700;color:{conf_color}">{conf:.0f}%</div>'
+                f'<div style="font-size:10px;color:#606070">confidence</div>'
+                f'</div>'
+                f'</div>'
+                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;margin:.5rem 0">'
+                f'<div><div style="font-size:10px;color:#606070;text-transform:uppercase">Entry</div>'
+                f'<div style="font-size:13px;font-weight:600;font-family:monospace">${entry:,.2f}</div></div>'
+                f'<div><div style="font-size:10px;color:#606070;text-transform:uppercase">Stop Loss</div>'
+                f'<div style="font-size:13px;font-weight:600;font-family:monospace;color:#ef4444">${sl:,.2f}</div></div>'
+                f'<div><div style="font-size:10px;color:#606070;text-transform:uppercase">TP 1</div>'
+                f'<div style="font-size:13px;font-weight:600;font-family:monospace;color:#22c55e">${tp1:,.2f}</div></div>'
+                f'<div><div style="font-size:10px;color:#606070;text-transform:uppercase">TP 2</div>'
+                f'<div style="font-size:13px;font-weight:600;font-family:monospace;color:#22c55e">${tp2:,.2f}</div></div>'
+                f'</div>'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                f'border-top:1px solid #1A1A28;padding-top:.5rem;font-size:11px;color:#606070">'
+                f'<span>{session_s} · {regime_s}</span>'
+                f'<span style="background:#1a1400;color:#B8860B;padding:.15rem .5rem;border-radius:4px;font-weight:700">1:{rr2:.1f} RR</span>'
+                f'</div>'
+                f'{notes_html}'
+                f'<div style="font-size:10px;color:#404050;margin-top:.3rem">{ts_display}</div>'
+                f'</div>'
+            )
+            st.markdown(html, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════
